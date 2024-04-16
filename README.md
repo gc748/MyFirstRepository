@@ -1,2 +1,6 @@
 # MyFirstRepository
-The first repository.
+
+## Gabriel Cage-Sepeda
+
+### STA 445
+
