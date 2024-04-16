@@ -1,0 +1,151 @@
+---
+title: "STA 445 S24 Assignment 5"
+author: "Gabriel Cage-Sepeda"
+date: '2024-03-05'
+output: pdf_document
+---
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(stringr)
+```
+
+## Problem 1
+
+For the following regular expression, explain in words what it matches on. Then add test strings to demonstrate that it in fact does match on the pattern you claim it does.  Do at least 4 tests.  Make sure that your test set of strings has several examples that match as well as several that do not. Make sure to remove the `eval=FALSE` from the R-chunk options.
+
+a. This regular expression matches:  *must contain lowercase a*
+
+```{r}
+        strings <- c("ready", "man", "nope", "And")
+        data.frame( string = strings ) %>%
+          mutate( result = str_detect(string, 'a') )
+```
+b. This regular expression matches:  *must contain lowercase a immediately followed by lowercase b*
+
+```{r}
+        
+        strings <- c("absolute", "bank", "ready", "best", "ABSOLUTE", "BANK")
+        data.frame( string = strings ) %>%
+          mutate( result = str_detect(string, 'ab') )
+```
+
+c. This regular expression matches:  *must contain a or b or both, must be lower case, can be in any order*
+
+```{r}
+        strings <- c("absolute", "bank", "ABSOLUTE", "BANK", "ready", "best", "axxb", "bxxa")
+        data.frame( string = strings ) %>%
+          mutate( result = str_detect(string, '[ab]') )
+```
+
+d.  This regular expression matches:  *must contain a or b or both, must be lowercase and must be at the beginning of the word*
+
+```{r}
+        strings <- c("absolute", "bank", "ABSOLUTE", "BANK", "ready", "best", "xxabxx", "ax")
+        data.frame( string = strings ) %>%
+          mutate( result = str_detect(string, '^[ab]') )
+```
+
+e. This regular expression matches:  *must contain at least one number and at least one 'a', can be uppercase or lowercase, the number must come before the a and there must be only exactly one space between the number and a.*
+
+```{r}
+        strings <- c("1 a", "1a", "1 1 a", "111 A", "1  a", "a 1", "1 aa", "a1m ba3", "m1m bab", "m1 ab")
+        data.frame( string = strings ) %>%
+          mutate( result = str_detect(string, '\\d+\\s[aA]') )
+```
+
+f. This regular expression matches:  *must contain at least one number and one 'a', uppercase or lowercase, the number must come before the a, and only white space or no space may exist between the number and a.*
+
+```{r, eval=FALSE}
+        strings <- c("1 a", "1a", "1 1 a", "111 A", "1  a", "a 1", "1 aa", "a1m ba3", "m1m bab", "m1 ab")
+        data.frame( string = strings ) %>%
+          mutate( result = str_detect(string, '\\d+\\s*[aA]') )
+```
+
+g. This regular expression matches:  *0 or more repetitions of any character; literally anything, even nothing works*
+
+```{r, eval=FALSE}
+        strings <- c(" ", "a", "1", "1a", "aaaaa", "   ", "#", "")
+        data.frame( string = strings ) %>%
+      mutate( result = str_detect(string, '.*') )
+```
+
+h. This regular expression matches: *must contain two 'w' immediately followed by 'bar' at the beginning of the string*
+
+```{r, eval=FALSE}
+        strings <- c("wwbar", " wwbar", "ww", "barww", "wwb", "wwabcbar", "ww bar", "wwbar1")
+        data.frame( string = strings ) %>%
+          mutate( result = str_detect(string, '^\\w{2}bar') )
+```
+
+i. This regular expression matches: *must contain "foo.bar" exactly anywhere in the string OR "wwbar" exactly at the beginning of the string*
+
+```{r, eval=FALSE}
+        strings <- c("foo.bar", "wwbar", "foo bar", "bar", "xxfoo.barxx", "wwbarxx")
+        data.frame( string = strings ) %>%
+          mutate( result = str_detect(string, '(foo\\.bar)|(^\\w{2}bar)') )
+```
+    
+## Problem 2
+
+The following file names were used in a camera trap study. The S number represents the site, P is the plot within a site, C is the camera number within the plot, the first string of numbers is the YearMonthDay and the second string of numbers is the HourMinuteSecond.
+
+```{r}
+    file.names <- c( 'S123.P2.C10_20120621_213422.jpg',
+                     'S10.P1.C1_20120622_050148.jpg',
+                 'S187.P2.C2_20120702_023501.jpg')
+```
+    
+Produce a data frame with columns corresponding to the `site`, `plot`, `camera`, `year`, `month`, `day`, `hour`, `minute`, and `second` for these three file names. So we want to produce code that will create the data frame:
+    
+```{r, eval=FALSE}
+     Site Plot Camera Year Month Day Hour Minute Second
+     S123   P2    C10 2012    06  21   21     34     22
+      S10   P1     C1 2012    06  22   05     01     48
+      S187   P2     C2 2012    07  02   02     35     01
+```
+
+```{r}
+df2 <- data.frame(string = file.names)
+separate(df2, string, sep = '_|\\.', into = c('Site', 'Plot', 'Camera', 'Dates', 'Times', 'jpg')) %>%
+  mutate(Year = str_sub(Dates, start=1, end=4),
+         Month = str_sub(Dates, start=5, end=6),
+         Day = str_sub(Dates, start=7, end=8),
+         Hour = str_sub(Times, start=1, end=2),
+         Minute = str_sub(Times, start=3, end=4),
+         Second = str_sub(Times, start=5, end=6)) %>%
+  select(!c(Dates, Times, jpg))
+```
+
+3. The full text from Lincoln's Gettysburg Address is given below. Calculate the mean word length *Note: consider 'battle-field' as one word with 11 letters*).
+
+```{r}
+Gettysburg <- 'Four score and seven years ago our fathers brought forth on this
+continent, a new nation, conceived in Liberty, and dedicated to the proposition
+that all men are created equal. Now we are engaged in a great civil war, testing
+whether that nation, or any nation so conceived and so dedicated, can long
+endure. We are met on a great battle-field of that war. We have come to dedicate
+a portion of that field, as a final resting place for those who here gave their
+lives that that nation might live. It is altogether fitting and proper that we
+should do this. But, in a larger sense, we can not dedicate -- we can not
+consecrate -- we can not hallow -- this ground. The brave men, living and dead,
+who struggled here, have consecrated it, far above our poor power to add or
+detract. The world will little note, nor long remember what we say here, but it
+can never forget what they did here. It is for us the living, rather, to be
+dedicated here to the unfinished work which they who fought here have thus far
+so nobly advanced. It is rather for us to be here dedicated to the great task
+remaining before us -- that from these honored dead we take increased devotion
+to that cause for which they gave the last full measure of devotion -- that we
+here highly resolve that these dead shall not have died in vain -- that this
+nation, under God, shall have a new birth of freedom -- and that government of
+the people, by the people, for the people, shall not perish from the earth.'
+```
+
+```{r}
+Gettysburg <- str_replace_all(Gettysburg, pattern="\\--", replacement=" ")
+Gettysburg <- str_replace_all(Gettysburg, pattern="\\.", replacement="")
+Gettysburg <- str_replace_all(Gettysburg, pattern="\\-", replacement="")
+str_split(Gettysburg, '\\s+|\\\n|\\,\\s+')[[1]] %>%
+  str_length() %>%
+  mean()
+```

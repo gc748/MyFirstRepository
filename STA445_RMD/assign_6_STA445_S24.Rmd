@@ -1,0 +1,172 @@
+---
+title: "STA_445_Assignment_6"
+author: "Gabriel Cage-Sepeda"
+date: "2024-3-26"
+output: pdf_document
+---
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(lubridate)
+```
+
+## Problem 1
+Convert the following to date or date/time objects.
+
+a. September 13, 2010.
+
+```{r}
+mdy('September 13, 2010')
+```
+
+b. Sept 13, 2010.
+
+```{r}
+mdy('Sept 13, 2010')
+```
+
+c. Sep 13, 2010.
+
+```{r}
+mdy('Sep 13, 2010')
+```
+
+d. S 13, 2010. Comment on the month abbreviation needs.
+
+#The month needs the corrct abbreviation, for September only Sep works as an abbreviation.
+
+```{r}
+mdy('S 13, 2010')
+```
+
+e. 07-Dec-1941.
+
+```{r}
+dmy('07-Dec-1941')
+```
+
+f. 1-5-1998. Comment on why you might be wrong.
+
+#1 and 5 could both be the month or day, so this is either May first or January fifth. I went with May first.
+
+```{r}
+dmy('1-5-1998')
+```
+
+g. 21-5-1998. Comment on why you know you are correct.
+
+#21 can't be the month and 1998 has to be the year, so this is May 21.
+
+```{r}
+dmy('21-5-1998')
+```
+
+h. 2020-May-5 10:30 am
+
+```{r}
+ymd_hm('2020-May-5 10:30 am')
+```
+
+i. 2020-May-5 10:30 am PDT (ex Seattle)
+
+```{r}
+ymd_hm('2020-May-5 10:30 am', tz = 'US/Pacific')
+```
+
+j. 2020-May-5 10:30 am AST (ex Puerto Rico)
+
+```{r}
+ymd_hm('2020-May-5 10:30 am', tz = 'Atlantic/Bermuda')
+```
+
+### Problem 2
+
+Using just your date of birth (ex Sep 7, 1998) and today's date calculate the following:
+
+```{r}
+bday <- mdy_hm('12-28-2003 12:30pm', tz = 'US/Arizona')
+current <- mdy_hm('03-26-2024 3:00pm', tz = 'US/Arizona')
+bday
+current
+```
+
+a. Calculate the date of your 64th birthday.
+
+```{r}
+bday + years(64)
+```
+
+b. Calculate your current age (in years).
+
+```{r}
+year(as.period(interval(bday, current)))
+```
+
+c. Using your result in part (b), calculate the date of your next birthday.
+
+```{r}
+Nextbday <- bday + years(20) + years(1)
+Nextbday
+```
+
+d. The number of _days_ until your next birthday.
+
+```{r}
+as.period(interval(current, Nextbday), unit = 'days')
+```
+
+e. The number of _months_ and _days_ until your next birthday.
+
+```{r}
+as.period(interval(current, Nextbday))
+```
+
+## Problem 3
+
+Suppose you have arranged for a phone call to be at 3 pm on May 8, 2015 at Arizona time. However, the recipient will be in Auckland, NZ. What time will it be there? 
+
+```{r}
+with_tz(mdy_hm('05-08-2015 3:00 pm', tz = 'US/Arizona'), tzone = 'Pacific/Auckland')
+```
+
+## Problem 4
+
+It turns out there is some interesting periodicity regarding the number of births on particular days of the year.
+
+a. Using the `mosaicData` package, load the data set `Births78` which records the number of children born on each day in the United States in 1978. Because this problem is intended to show how to calculate the information using the `date`, remove all the columns *except* `date` and `births`. 
+
+```{r warning=FALSE}
+library(mosaicData)
+data(Births78)
+Births78 <- Births78 %>%
+  select('date', 'births')
+Births78
+```
+
+b. Graph the number of `births` vs the `date` with date on the x-axis. What stands out to you? Why do you think we have this trend?
+
+#There are more births around August and September than the rest of the year, maybe because the holiday season is 9 months before. There is also a space between clusters of dots in each month, proabably for day of the week.
+
+```{r}
+Births78 %>%
+  ggplot(aes(x=date, y=births)) +
+  geom_point()
+```
+
+c. To test your assumption, we need to figure out the what day of the week each observation is. Use `dplyr::mutate` to add a new column named `dow` that is the day of the week (Monday, Tuesday, etc). This calculation will involve some function in the `lubridate` package and the `date` column.
+
+```{r}
+Births78 <- Births78 %>%
+  dplyr::mutate('dow' = wday(date, label=TRUE))
+Births78
+```
+
+d. Plot the data with the point color being determined by the day of the week variable.
+
+#The space between clusters in each month is because there are less births on the weekend (Saturday/Sunday) than during thw week.
+
+```{r}
+Births78 %>%
+  ggplot(aes(x=date, y=births)) +
+  geom_point(aes(color=dow))
+```
